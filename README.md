@@ -42,3 +42,22 @@ when their Fuel Mate card is scanned at the counter (no separate coupon barcode)
 
 `offerId` is the code your point-of-sale system would use to link the offer to the card. Landscape 16:9 images (e.g. 2000 × 1125) work best for hero deals.
 To remove a deal straight away, delete its image from the folder.
+
+### Store-specific deals
+
+A deal with a `store` field is shown only to members whose last visit was that Liberty site, and is drawn by the app
+(no image needed). Optional `when` sets a happy-hour window (days: 0 = Sunday … 6 = Saturday):
+
+```json
+{
+  "id": "moruya-happy-hour-coffee",
+  "store": "Liberty Moruya",
+  "title": "Happy hour: $2 barista coffee",
+  "price": "$2",
+  "item": "Any regular barista coffee",
+  "when": { "label": "Weekdays", "days": [1,2,3,4,5], "from": "14:00", "to": "16:00" },
+  "starts": "2026-10-01",
+  "ends": "2026-12-31",
+  "redeem": { "offerId": "MORUYA-HH-COFFEE2", "terms": "Liberty Moruya only. One per member per day." }
+}
+```

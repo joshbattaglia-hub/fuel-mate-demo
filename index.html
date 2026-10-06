@@ -203,6 +203,21 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
 .redeemed .tick{width:76px;height:76px;border-radius:38px;background:var(--green-tint);color:var(--green);display:flex;align-items:center;justify-content:center}
 .redeemed b{font-size:22px}
 .redeemed span{font-size:14px;color:#C8C8C8}
+/* store-specific deal */
+.lv{display:flex;flex-direction:column;gap:12px;padding:16px 18px;background:radial-gradient(120% 140% at 100% 0%,#6B3A22 0%,#2A1710 55%,#140B07 100%);color:#fff;text-align:left;aspect-ratio:16/8;justify-content:space-between}
+.lv.big{border-radius:16px;aspect-ratio:16/9}
+.lv-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.lv-pin{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;background:rgba(255,255,255,.14);border-radius:999px;padding:5px 10px}
+.lv-live{font-size:11px;font-weight:900;letter-spacing:1px;background:#3DDC84;color:#0B2A17;border-radius:8px;padding:4px 8px}
+.lv-mid{display:flex;align-items:center;gap:14px}
+.lv-cup{width:58px;height:58px;border-radius:29px;background:#F3E3D3;color:#3A1F12;display:flex;align-items:center;justify-content:center;flex:none}
+.lv-price{font-size:46px;font-weight:900;line-height:.95;letter-spacing:-1px}
+.lv.big .lv-price{font-size:56px}
+.lv-item{font-size:15px;font-weight:700;color:#F3E3D3}
+.lv-hh{font-size:12px;font-weight:800;letter-spacing:1.4px;color:#F3C9A6}
+.hero.local{border-color:#6B3A22;box-shadow:0 10px 24px rgba(60,30,15,.2)}
+.oc-ic{width:64px;height:36px;border-radius:6px;background:#2A1710;color:#F3E3D3;display:flex;align-items:center;justify-content:center;flex:none}
+.oc-ic svg{width:22px;height:22px}
 /* receipts */
 .rrow{width:100%;border:0;background:none;text-align:left;display:flex;align-items:center;gap:12px;min-height:70px;border-bottom:1px solid var(--p-line);font-family:inherit;color:var(--p-ink);cursor:pointer;padding:10px 0}
 .list .rrow:last-child{border-bottom:0}
@@ -345,7 +360,10 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
     var manifest = fetch('deals/deals.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():{deals:[]};}).catch(function(){return {deals:[]};});
     var listing = fetch('https://api.github.com/repos/'+REPO+'/contents/deals').then(function(r){return r.ok?r.json():[];}).catch(function(){return [];});
     Promise.all([manifest,listing]).then(function(res){
-      var items=(res[0].deals||[]).map(function(d){return {src:'deals/'+d.file,file:d.file,title:d.title||titleFromFile(d.file),starts:d.starts,ends:d.ends,hero:!!d.hero,redeem:d.redeem||null};});
+      var items=(res[0].deals||[]).map(function(d){
+        if(d.store) return {local:true,file:d.id,src:null,store:d.store,title:d.title,price:d.price,item:d.item,when:d.when||null,starts:d.starts,ends:d.ends,redeem:d.redeem||{}};
+        return {src:'deals/'+d.file,file:d.file,title:d.title||titleFromFile(d.file),starts:d.starts,ends:d.ends,hero:!!d.hero,redeem:d.redeem||null};
+      });
       items.sort(function(a,b){return (b.hero?1:0)-(a.hero?1:0);});
       var known={}; items.forEach(function(d){known[d.file]=1;});
       (Array.isArray(res[1])?res[1]:[]).forEach(function(f){
@@ -396,6 +414,8 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
     plus:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
     checkSm:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>',
     barsSm:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 5v14M7 5v14M10 5v14M14 5v14M17 5v14M20 5v14"/></svg>',
+    cup:'<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h13v5a6 6 0 01-6 6h-1a6 6 0 01-6-6z"/><path d="M17 11h1.5a2.5 2.5 0 010 5H17"/><path d="M8 3c0 1.5 1 1.5 1 3M12 3c0 1.5 1 1.5 1 3"/></svg>',
+    pinSm:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-12a7 7 0 0114 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>',
     tag:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4l-7.2 7.2a2 2 0 01-2.8 0L3 13V3h10l7.6 7.6a2 2 0 010 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>',
     gift:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-2-4-6-4-6-1s6 1 6 1 6 2 6-1-4-3-6 1"/></svg>'
   };
@@ -469,7 +489,7 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
     var offers=activeOffers();
     if(offers.length){
       h+='<div class="oncard"><div class="lbl2">'+offers.length+' offer'+(offers.length>1?'s':'')+' on this card · applies when scanned</div>'+
-        offers.map(function(d){return '<div class="oc-row"><img src="'+esc(d.src)+'" alt=""><b>'+esc(d.title)+'</b></div>';}).join('')+
+        offers.map(function(d){return '<div class="oc-row">'+(d.local?'<span class="oc-ic">'+ICON.cup+'</span>':'<img src="'+esc(d.src)+'" alt="">')+'<b>'+esc(d.title)+'</b></div>';}).join('')+
         '<button type="button" class="linkbtn" style="color:#fff;text-decoration:underline;font-weight:600" data-act="sim-scan">Simulate scan at counter (demo)</button></div>';
     }
     h+='<div class="tcard '+t.cls+'"><div class="row"><div><div class="eyebrow">Fuel Mate</div><div class="tname">'+t.name.toUpperCase()+'</div></div>'+(t.cents?'<div class="big" style="font-size:32px">'+t.cents+'¢<small>per litre off diesel</small></div>':'<div class="big" style="font-size:18px">STARTER<small>No discount yet</small></div>')+'</div>'+
@@ -593,6 +613,28 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
 
   /* ---------- deals ---------- */
   function indexed(){ return DEALS.items.map(function(d,i){return {d:d,i:i};}); }
+  /* Store-specific deals show only for the member's last-visited Liberty site. */
+  function lastVisit(){ return S.role==='driver' ? 'Liberty Moruya' : ((RECEIPTS[S.role]||[])[0]||{}).site; }
+  function localDeals(){ var lv=lastVisit(); return indexed().filter(function(x){return x.d.local && x.d.store===lv;}); }
+  function nationalRest(){ return indexed().filter(function(x){return !x.d.hero && !x.d.local;}); }
+  function hhm(t){ var p=t.split(':'); return (+p[0])*60+(+p[1]); }
+  function whenLabel(w){ if(!w) return ''; function f(t){var h=+t.split(':')[0], m=t.split(':')[1]; return ((h%12)||12)+(m!=='00'?':'+m:'')+(h<12?'am':'pm');} return (w.label?w.label+' ':'')+f(w.from)+'\u2013'+f(w.to); }
+  function liveNow(w){ if(!w) return true; var n=new Date(), day=n.getDay(), mins=n.getHours()*60+n.getMinutes(); if(w.days && w.days.indexOf(day)<0) return false; return mins>=hhm(w.from) && mins<hhm(w.to); }
+  function localVisual(d, big){
+    var live=liveNow(d.when);
+    return '<div class="lv'+(big?' big':'')+'"><div class="lv-top"><span class="lv-pin">'+ICON.pinSm+esc(d.store)+'</span>'+(live?'<span class="lv-live">ON NOW</span>':'')+'</div>'+
+      '<div class="lv-mid"><div class="lv-cup">'+ICON.cup+'</div><div><div class="lv-price">'+esc(d.price)+'</div><div class="lv-item">'+esc(d.item)+'</div></div></div>'+
+      '<div class="lv-hh">HAPPY HOUR · '+esc(whenLabel(d.when)).toUpperCase()+'</div></div>';
+  }
+  function localCard(x){
+    var d=x.d, st=offerState(d);
+    var sub = st==='redeemed'?'Redeemed today at '+S.redeemed[d.file] : (st==='active'?'On your card · applies when scanned':'Because you visited '+esc(d.store.replace('Liberty ',''))+' recently');
+    var btn = st==='redeemed'?'<button type="button" class="pill done" data-redeem="'+x.i+'">'+ICON.checkSm+'Redeemed</button>'
+      : st==='active'?'<button type="button" class="pill done" data-redeem="'+x.i+'">'+ICON.checkSm+'On card</button>'
+      : '<button type="button" class="pill" style="background:var(--red)" data-redeem="'+x.i+'">'+ICON.plus+'Add to card</button>';
+    return '<div class="hero local"><button type="button" class="hero-img" style="background:none" data-redeem="'+x.i+'" aria-label="'+esc(d.title)+'">'+localVisual(d)+'</button>'+
+      '<div class="hero-body"><div class="grow"><b>'+esc(d.title)+'</b><span>'+sub+'</span></div>'+btn+'</div></div>';
+  }
   function offerState(d){ return S.redeemed[d.file]?'redeemed':(S.activated[d.file]?'active':'new'); }
   function heroCard(x){
     var d=x.d, st=offerState(d);
@@ -607,9 +649,10 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
   function activeOffers(){ return DEALS.items.filter(function(d){return d.redeem && S.activated[d.file] && !S.redeemed[d.file];}); }
   function dealsStrip(){
     if(DEALS.state!=='ready' || !DEALS.items.length) return '';
-    var all=indexed(), heroes=all.filter(function(x){return x.d.hero;}), rest=all.filter(function(x){return !x.d.hero;});
+    var all=indexed(), heroes=all.filter(function(x){return x.d.hero;}), rest=nationalRest(), locals=localDeals();
     var h='<div style="display:flex;justify-content:space-between;align-items:center"><p class="h2">In-store deals</p><button type="button" class="linkbtn" style="color:var(--red)" data-go="deals">See all</button></div>';
     if(heroes.length) h+=heroCard(heroes[0]);
+    if(locals.length){ h+='<p class="h2" style="margin-top:4px">Just for you at '+esc(locals[0].d.store.replace('Liberty ',''))+'</p>'; locals.forEach(function(x){ h+=localCard(x); }); if(rest.length) h+='<p class="h2" style="margin-top:4px">More deals</p>'; }
     if(rest.length) h+='<div class="strip">'+rest.slice(0,6).map(function(x){return '<button type="button" class="thumb" data-deal="'+x.i+'" aria-label="'+esc(x.d.title)+'"><img src="'+esc(x.d.src)+'" alt="" loading="lazy"></button>';}).join('')+'</div>';
     return h;
   }
@@ -618,8 +661,8 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
     if(!d||!d.redeem) return scrDeals();
     var r=d.redeem, st=offerState(d), h='<div class="cardpg">';
     h+='<div class="hdr"><button type="button" class="round" data-go="'+(S.couponBack||'deals')+'" aria-label="Close offer">'+ICON.close+'</button><span>Fuel Mate offer</span><span style="width:44px"></span></div>';
-    h+='<img src="'+esc(d.src)+'" alt="'+esc(d.title)+'" style="width:100%;border-radius:16px;display:block">';
-    h+='<div><div style="font-size:20px;font-weight:900;line-height:1.2">'+esc(d.title)+'</div><div style="font-size:13px;color:#C8C8C8;margin-top:4px">'+(d.ends?'Ends '+fmtDate(d.ends)+' · ':'')+'Participating Liberty Time Saver sites</div></div>';
+    h+= d.local ? localVisual(d,true) : '<img src="'+esc(d.src)+'" alt="'+esc(d.title)+'" style="width:100%;border-radius:16px;display:block">';
+    h+='<div><div style="font-size:20px;font-weight:900;line-height:1.2">'+esc(d.title)+'</div><div style="font-size:13px;color:#C8C8C8;margin-top:4px">'+(d.ends?'Ends '+fmtDate(d.ends)+' · ':'')+(d.local?esc(d.store)+' only · '+esc(whenLabel(d.when)):'Participating Liberty Time Saver sites')+'</div></div>';
     if(st==='new'){
       h+='<div class="steps dark"><div><i>1</i><span><strong>Add the offer to your Fuel Mate card.</strong></span></div><div><i>2</i><span><strong>Scan your card at the counter</strong> as usual. The offer applies automatically.</span></div></div>';
       if(r.terms) h+='<p style="margin:0;font-size:12px;color:#A8A8A8;line-height:1.45">'+esc(r.terms)+'</p>';
@@ -642,8 +685,9 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
     } else if(!DEALS.items.length){
       h+='<div class="item" style="flex-direction:column;align-items:flex-start;gap:6px;padding:20px"><b>No deals right now</b><span>New national promotions will show here as soon as they’re added.</span></div>';
     } else {
-      var all=indexed(), heroes=all.filter(function(x){return x.d.hero;}), rest=all.filter(function(x){return !x.d.hero;});
+      var all=indexed(), heroes=all.filter(function(x){return x.d.hero;}), rest=nationalRest(), locals=localDeals();
       heroes.forEach(function(x){ h+=heroCard(x); });
+      if(locals.length){ h+='<p class="h2" style="margin-top:4px">Your local: '+esc(locals[0].d.store)+'</p>'; locals.forEach(function(x){ h+=localCard(x); }); }
       if(heroes.length && rest.length) h+='<p class="h2" style="margin-top:4px">More deals</p>';
       h+='<div class="dgrid">'+rest.map(function(x){ var d=x.d;
         return '<button type="button" class="dcard" data-deal="'+x.i+'"><img src="'+esc(d.src)+'" alt="'+esc(d.title)+'" loading="lazy"><span class="dmeta"><b>'+esc(d.title)+'</b>'+(d.ends?'<span>Ends '+fmtDate(d.ends)+'</span>':'')+'</span></button>';

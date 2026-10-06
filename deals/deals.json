@@ -12,6 +12,31 @@
       }
     },
     {
+      "id": "moruya-happy-hour-coffee",
+      "store": "Liberty Moruya",
+      "title": "Happy hour: $2 barista coffee",
+      "price": "$2",
+      "item": "Any regular barista coffee",
+      "when": {
+        "label": "Weekdays",
+        "days": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "from": "14:00",
+        "to": "16:00"
+      },
+      "starts": "2026-10-01",
+      "ends": "2026-12-31",
+      "redeem": {
+        "offerId": "MORUYA-HH-COFFEE2",
+        "terms": "Liberty Moruya only. Any regular barista coffee for $2, weekdays 2pm to 4pm. Add to your card, then scan your Fuel Mate card at the counter. One per member per day."
+      }
+    },
+    {
       "file": "ice-cream-any-2-for-8.jpg",
       "title": "Biscoff, Oreo & Cadbury ice creams: any 2 for $8",
       "starts": "2026-09-30",
