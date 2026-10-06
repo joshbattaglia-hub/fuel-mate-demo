@@ -203,6 +203,25 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
 .redeemed .tick{width:76px;height:76px;border-radius:38px;background:var(--green-tint);color:var(--green);display:flex;align-items:center;justify-content:center}
 .redeemed b{font-size:22px}
 .redeemed span{font-size:14px;color:#C8C8C8}
+/* flame tank */
+.tank{position:relative;flex:none}
+.tank-inner{position:relative;aspect-ratio:303/351}
+.tank-empty{display:block;width:100%;height:100%;filter:grayscale(1);opacity:.22}
+.tank-fill{position:absolute;inset:0;-webkit-mask:url(assets/flame.png) center/100% 100% no-repeat;mask:url(assets/flame.png) center/100% 100% no-repeat;overflow:hidden}
+.tank-fill img{position:absolute;inset:0;width:100%;height:100%;clip-path:inset(calc(100% - var(--lvl)) 0 0 0);transition:clip-path 1.1s cubic-bezier(.2,.8,.2,1)}
+.tank-wave{position:absolute;left:0;width:200%;height:12%;bottom:var(--lvl);transform:translateY(50%);transition:bottom 1.1s cubic-bezier(.2,.8,.2,1);animation:tankwave 2.4s linear infinite}
+.tank-wave svg{display:block;width:100%;height:100%}
+.tank-wave path{fill:rgba(255,255,255,.55)}
+@keyframes tankwave{from{margin-left:0}to{margin-left:-100%}}
+.tank-bubble{width:92px;height:92px;border-radius:24px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.tdisc{font-size:13px;font-weight:600;margin-top:6px;opacity:.95}
+.tdisc b{font-size:18px;font-weight:900}
+.tank-wrap{display:flex;justify-content:center;padding:16px 0 4px}
+.tank-wrap .tank{margin-right:96px}
+.tank-mark{position:absolute;left:-10px;right:-10px;border-top:2px dashed rgba(18,18,18,.3);height:0}
+.tank-mark span{position:absolute;left:calc(100% + 8px);top:-9px;white-space:nowrap;font-size:12px;font-weight:800;color:var(--p-muted)}
+.tank-mark.top{border-top-style:solid}
+@media (prefers-reduced-motion:reduce){.tank-wave{animation:none}.tank-fill img,.tank-wave{transition:none}}
 /* store-specific deal */
 .lv{display:flex;flex-direction:column;gap:12px;padding:16px 18px;background:radial-gradient(120% 140% at 100% 0%,#6B3A22 0%,#2A1710 55%,#140B07 100%);color:#fff;text-align:left;aspect-ratio:16/8;justify-content:space-between}
 .lv.big{border-radius:16px;aspect-ratio:16/9}
@@ -422,15 +441,34 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 
   /* ---------- pieces ---------- */
+  /* Flame "tank": fills with colour as diesel litres are added this month (full at 1,500 L = Black Card). */
+  var TANK_MAX=1500, LAST_FILL=0;
+  function fillPct(){ return Math.max(0,Math.min(100,S.litres/TANK_MAX*100)); }
+  function flameTank(size, marks){
+    var pct=fillPct();
+    var h='<div class="tank" style="width:'+size+'px" role="img" aria-label="Fuel Mate tank '+Math.round(pct)+'% full: '+fmt(S.litres)+' of 1,500 litres this month">'+
+      '<div class="tank-inner"><img class="tank-empty" src="assets/flame.png" alt="">'+
+      '<div class="tank-fill" data-to="'+pct.toFixed(2)+'" style="--lvl:'+LAST_FILL.toFixed(2)+'%"><img src="assets/flame.png" alt="">'+
+      '<div class="tank-wave"><svg viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true"><path d="M0 6 Q12.5 0 25 6 T50 6 T75 6 T100 6 T125 6 T150 6 T175 6 T200 6 V12 H0Z"/></svg></div></div>';
+    if(marks) h+='<div class="tank-mark" style="bottom:50%"><span>Red · 750 L</span></div><div class="tank-mark top" style="bottom:100%"><span>Black · 1,500 L</span></div>';
+    return h+'</div></div>';
+  }
+  function animateTanks(){
+    var els=view.querySelectorAll('.tank-fill'); if(!els.length) return;
+    var to=els[0].dataset.to;
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ els.forEach(function(el){ el.style.setProperty('--lvl', el.dataset.to+'%'); }); }); });
+    LAST_FILL=+to;
+  }
   function tierCard(t, opts){
     opts=opts||{};
-    var p=progress(t), right = t.cents? '<div class="big">'+t.cents+'¢<small>off every litre of diesel</small></div>' : '<div class="big" style="font-size:20px">STARTER<small>No discount yet</small></div>';
+    var p=progress(t), right = '<div class="tank-bubble">'+flameTank(66,false)+'</div>';
+    var disc = t.cents? '<div class="tdisc"><b>'+t.cents+'¢</b> off every litre of diesel</div>' : '<div class="tdisc">Starter tier · no discount yet</div>';
     var msg;
     if(!p.nx) msg='<p class="pmsg"><strong>Top tier unlocked.</strong> You’re saving 4¢ on every litre of diesel.</p>';
     else msg='<p class="pmsg"><strong>'+fmt(p.toGo)+' L to '+p.nx.name+'</strong> to unlock '+p.nx.cents+'¢/L off diesel.</p>';
     var who = (S.role==='driver')?'Your team’s litres':'This month';
     return '<div class="tcard '+t.cls+'">'+
-      '<div class="row"><div><div class="eyebrow">Your tier</div><div class="tname">'+t.name.toUpperCase()+'</div></div>'+right+'</div>'+
+      '<div class="row"><div><div class="eyebrow">Your tier</div><div class="tname">'+t.name.toUpperCase()+'</div>'+disc+'</div>'+right+'</div>'+
       '<div style="display:flex;flex-direction:column;gap:8px">'+
         '<div class="prow"><span><strong>'+fmt(S.litres)+' L</strong> · '+who+'</span><span>'+(p.nx?'Goal '+fmt(p.nx.need)+' L':'1,500 L+')+'</span></div>'+
         '<div class="bar" role="progressbar" aria-label="Progress to next tier" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(p.pct)+'"><i style="width:'+p.pct+'%"></i></div>'+
@@ -505,9 +543,11 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
     h+='<div><p class="hello" style="font-size:28px;font-weight:900">Rewards</p><p class="sub" style="line-height:1.45">The more diesel your business fills each month, the more you save on every litre.</p></div>';
     var ringColor = p.nx? (p.nx.key==='red'?'var(--red)':'#141414') : '#141414';
     h+='<div class="item" style="flex-direction:column;padding:22px;gap:12px;border-radius:22px">'+
-      '<div class="ring" style="background:conic-gradient('+ringColor+' 0 '+p.pct+'%, #E9E6E1 '+p.pct+'% 100%)"><div><strong>'+fmt(S.litres)+'</strong><span>'+(p.nx?'of '+fmt(p.nx.need)+' L':'litres')+'</span></div></div>'+
+      '<div class="tank-wrap">'+flameTank(150,true)+'</div>'+
+      '<div class="center"><strong style="font-size:30px;font-weight:900;font-variant-numeric:tabular-nums">'+fmt(S.litres)+' L</strong><span style="display:block;font-size:13px;color:var(--p-muted)">of 1,500 L this month</span></div>'+
       '<div class="center" style="font-size:15px;line-height:1.4">'+(p.nx?'<strong>'+fmt(p.toGo)+' L to go</strong> this month to reach '+p.nx.name:'<strong>You’re on Black Card</strong>, our top tier')+'</div>'+
-      '<span class="center">Diesel litres only · resets on the 1st of each month</span></div>';
+      '<span class="center">Diesel litres only · resets on the 1st of each month</span>'+
+      '<button type="button" class="pill" style="align-self:center;background:var(--p-ink)" data-act="sim-fill">'+ICON.pump.replace('width="24" height="24"','width="18" height="18"')+'Simulate a fill (+80 L)</button></div>';
     h+='<p class="h2">Your tiers</p>';
     var rows=[
       ['blue','Blue Card','Where every new member starts','<span style="font-size:13px;font-weight:800;color:var(--blue)">STARTER</span>','linear-gradient(135deg,#2F72CC,#164A8E)'],
@@ -759,7 +799,7 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
     var top=view.scrollTop;
     view.innerHTML=SCREENS[S.screen]();
     view.scrollTop = keepScroll?top:0;
-    renderNav(); renderPanel(); renderModal();
+    renderNav(); renderPanel(); renderModal(); animateTanks();
   }
   function go(screen){ S.screen=screen; if(screen==='reinstate'){S.reinstateDone=false;S.cardErr='';} render(false); }
 
@@ -790,6 +830,7 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
   document.addEventListener('click',function(e){
     var el=e.target.closest('[data-go],[data-toast],[data-act],[data-role],[data-deal],[data-receipt],[data-redeem]'); if(!el) return;
     if(el.dataset.redeem!==undefined){ S.couponBack=(S.screen==='coupon'?S.couponBack:S.screen); S.modal=null; S.couponIdx=+el.dataset.redeem; go('coupon'); return; }
+    if(el.dataset.act==='sim-fill'){ S.litres=Math.min(2000,S.litres+80); render(true); toast('Diesel fill added: 80 L. Your tank is filling up.'); return; }
     if(el.dataset.act==='activate'){ var da=DEALS.items[S.couponIdx]; if(da){ S.activated[da.file]=true; } render(false); toast('Added to your Fuel Mate card.'); return; }
     if(el.dataset.act==='sim-scan'){
       var now=new Date().toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit'}), applied=activeOffers();
