@@ -26,7 +26,8 @@ Deals listed in `deals.json` disappear from the app automatically after their en
 ### Hero deals you scan to redeem
 
 Add `"hero": true` and a `redeem` block to a deal in `deals.json` to make it the featured, app-exclusive offer.
-It gets a large banner at the top of Home and Deals, and a barcode screen customers show at the counter:
+It gets a large banner at the top of Home and Deals. Customers tap **Add to card**, and the offer is applied
+when their Fuel Mate card is scanned at the counter (no separate coupon barcode):
 
 ```json
 {
@@ -35,9 +36,9 @@ It gets a large banner at the top of Home and Deals, and a barcode screen custom
   "starts": "2026-09-30",
   "ends": "2026-12-22",
   "hero": true,
-  "redeem": { "barcode": "2600300600013", "terms": "One redemption per member per day." }
+  "redeem": { "offerId": "TT-TENDERS-3FOR6", "terms": "One redemption per member per day." }
 }
 ```
 
-Landscape 16:9 images (e.g. 2000 × 1125) work best for hero deals.
+`offerId` is the code your point-of-sale system would use to link the offer to the card. Landscape 16:9 images (e.g. 2000 × 1125) work best for hero deals.
 To remove a deal straight away, delete its image from the folder.

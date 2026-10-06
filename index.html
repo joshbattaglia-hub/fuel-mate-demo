@@ -163,7 +163,17 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
 .usage-row .track i{display:block;height:100%;border-radius:4px;background:var(--red)}
 .sample{font-size:11px;font-weight:800;letter-spacing:1px;color:var(--p-muted);text-transform:uppercase}
 /* deals */
-.strip{display:flex;gap:10px;overflow-x:auto;margin:0 -20px;padding:0 20px 4px;scroll-snap-type:x mandatory}
+.strip{display:flex;gap:10px;overflow-x:auto;margin:0 -20px;padding:0 20px 4px;scroll-padding-inline:20px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.strip::-webkit-scrollbar{display:none}
+.strip::after{content:"";flex:0 0 10px}
+.oncard{background:#1F1F1F;border:1.5px solid var(--red-hi);border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.lbl2{font-size:12px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#FF8C85}
+.oc-row{display:flex;align-items:center;gap:12px}
+.oc-row img{width:64px;height:36px;object-fit:cover;border-radius:6px;flex:none}
+.oc-row b{font-size:14px;line-height:1.3}
+.steps.dark{background:#1F1F1F;color:#fff}
+.steps.dark div{border-bottom-color:#333}
+.steps.dark i{background:#fff;color:#121212}
 .thumb{flex:0 0 132px;aspect-ratio:4/5;border:0;padding:0;border-radius:14px;overflow:hidden;background:#ddd;cursor:pointer;scroll-snap-align:start}
 .thumb img,.dcard img{width:100%;height:100%;object-fit:cover;display:block}
 .dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -346,7 +356,7 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
   }
 
   var S;
-  function fresh(role){ return {role:role, litres:DEFAULT_LITRES[role], reinstated:false, screen:'home', reinstateDone:false, cardNum:'', cardErr:'', modal:null, redeemed:{}}; }
+  function fresh(role){ return {role:role, litres:DEFAULT_LITRES[role], reinstated:false, screen:'home', reinstateDone:false, cardNum:'', cardErr:'', modal:null, redeemed:{}, activated:{}}; }
   S = fresh('admin');
 
   var $ = function(id){return document.getElementById(id);};
@@ -431,7 +441,7 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
     } else {
       h+='<div class="grid2"><div class="stat"><span>Saved this month</span><strong>$'+savedThisMonth(t)+'</strong><em>'+(t.cents?'At '+t.cents+'¢/L':'Discounts start at Red')+'</em></div><div class="stat"><span>Card fills today</span><strong>0 / 2</strong><em>Daily limit</em></div></div>';
     }
-    h+='<button type="button" class="cta" data-go="card">'+ICON.bars+'<div class="grow"><b>Scan at the counter</b><span>Every scanned diesel fill counts</span></div>'+ICON.chev+'</button>';
+    h+='<button type="button" class="cta" data-go="card">'+ICON.bars+'<div class="grow"><b>Scan at the counter</b><span>'+(activeOffers().length?activeOffers().length+' offer'+(activeOffers().length>1?'s':'')+' on your card will apply too':'Every scanned diesel fill counts')+'</span></div>'+ICON.chev+'</button>';
     h+=dealsStrip();
     if(S.role!=='driver'){
       var lr=(RECEIPTS[S.role]||[])[0];
@@ -456,6 +466,12 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
     var h='<div class="cardpg">';
     h+='<div class="hdr"><button type="button" class="round" data-go="home" aria-label="Close card">'+ICON.close+'</button><span>My Fuel Mate card</span><span style="width:44px"></span></div>';
     h+='<div class="barcode"><div class="bars" aria-label="Barcode">'+barcodeHtml(num)+'</div><div class="num">'+num+'</div><div class="hint">'+ICON.sun+'Screen brightened for scanning</div></div>';
+    var offers=activeOffers();
+    if(offers.length){
+      h+='<div class="oncard"><div class="lbl2">'+offers.length+' offer'+(offers.length>1?'s':'')+' on this card · applies when scanned</div>'+
+        offers.map(function(d){return '<div class="oc-row"><img src="'+esc(d.src)+'" alt=""><b>'+esc(d.title)+'</b></div>';}).join('')+
+        '<button type="button" class="linkbtn" style="color:#fff;text-decoration:underline;font-weight:600" data-act="sim-scan">Simulate scan at counter (demo)</button></div>';
+    }
     h+='<div class="tcard '+t.cls+'"><div class="row"><div><div class="eyebrow">Fuel Mate</div><div class="tname">'+t.name.toUpperCase()+'</div></div>'+(t.cents?'<div class="big" style="font-size:32px">'+t.cents+'¢<small>per litre off diesel</small></div>':'<div class="big" style="font-size:18px">STARTER<small>No discount yet</small></div>')+'</div>'+
       '<div class="grid2" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:8px"><div><div style="font-size:12px">Cardholder</div><b style="font-size:14px">'+me.full.split(' ')[0][0]+'. '+me.full.split(' ').slice(1).join(' ')+'</b></div><div><div style="font-size:12px">This month</div><b style="font-size:14px">'+fmt(S.litres)+' L</b></div><div><div style="font-size:12px">Fills today</div><b style="font-size:14px">0 of 2</b></div></div></div>';
     if(p.nx) h+='<button type="button" class="cta dark" data-go="rewards" style="background:#1F1F1F"><div class="grow"><div style="font-size:14px;margin-bottom:8px"><strong>'+fmt(p.toGo)+' L</strong> to '+p.nx.name+' · '+p.nx.cents+'¢/L</div><div class="bar" style="background:#3A3A3A;height:8px"><i style="width:'+p.pct+'%;background:var(--red-hi)"></i></div></div>'+ICON.chev+'</button>';
@@ -577,15 +593,18 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
 
   /* ---------- deals ---------- */
   function indexed(){ return DEALS.items.map(function(d,i){return {d:d,i:i};}); }
+  function offerState(d){ return S.redeemed[d.file]?'redeemed':(S.activated[d.file]?'active':'new'); }
   function heroCard(x){
-    var d=x.d, red=S.redeemed[d.file];
+    var d=x.d, st=offerState(d);
+    var sub = st==='redeemed'?'Redeemed today at '+S.redeemed[d.file] : (st==='active'?'On your card · applies when scanned':(d.ends?'Ends '+fmtDate(d.ends)+' · ':'')+'Add to your card to redeem');
+    var btn = st==='redeemed'?'<button type="button" class="pill done" data-redeem="'+x.i+'">'+ICON.checkSm+'Redeemed</button>'
+      : st==='active'?'<button type="button" class="pill done" data-redeem="'+x.i+'">'+ICON.checkSm+'On card</button>'
+      : '<button type="button" class="pill" style="background:var(--red)" data-redeem="'+x.i+'">'+ICON.plus+'Add to card</button>';
     return '<div class="hero">'+
       '<button type="button" class="hero-img" data-deal="'+x.i+'" aria-label="View '+esc(d.title)+'"><img src="'+esc(d.src)+'" alt="'+esc(d.title)+'"><span class="hero-badge">APP EXCLUSIVE</span></button>'+
-      '<div class="hero-body"><div class="grow"><b>'+esc(d.title)+'</b><span>'+(d.ends?'Ends '+fmtDate(d.ends)+' · ':'')+'Scan to redeem</span></div>'+
-      (red?'<button type="button" class="pill done" data-redeem="'+x.i+'">'+ICON.checkSm+'Redeemed</button>'
-          :'<button type="button" class="pill" style="background:var(--red)" data-redeem="'+x.i+'">'+ICON.barsSm+'Redeem</button>')+
-      '</div></div>';
+      '<div class="hero-body"><div class="grow"><b>'+esc(d.title)+'</b><span>'+sub+'</span></div>'+btn+'</div></div>';
   }
+  function activeOffers(){ return DEALS.items.filter(function(d){return d.redeem && S.activated[d.file] && !S.redeemed[d.file];}); }
   function dealsStrip(){
     if(DEALS.state!=='ready' || !DEALS.items.length) return '';
     var all=indexed(), heroes=all.filter(function(x){return x.d.hero;}), rest=all.filter(function(x){return !x.d.hero;});
@@ -597,16 +616,19 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
   function scrCoupon(){
     var d=DEALS.items[S.couponIdx];
     if(!d||!d.redeem) return scrDeals();
-    var r=d.redeem, red=S.redeemed[d.file], h='<div class="cardpg">';
+    var r=d.redeem, st=offerState(d), h='<div class="cardpg">';
     h+='<div class="hdr"><button type="button" class="round" data-go="'+(S.couponBack||'deals')+'" aria-label="Close offer">'+ICON.close+'</button><span>Fuel Mate offer</span><span style="width:44px"></span></div>';
     h+='<img src="'+esc(d.src)+'" alt="'+esc(d.title)+'" style="width:100%;border-radius:16px;display:block">';
     h+='<div><div style="font-size:20px;font-weight:900;line-height:1.2">'+esc(d.title)+'</div><div style="font-size:13px;color:#C8C8C8;margin-top:4px">'+(d.ends?'Ends '+fmtDate(d.ends)+' · ':'')+'Participating Liberty Time Saver sites</div></div>';
-    if(!red){
-      h+='<div class="barcode"><div class="bars" style="height:96px" aria-label="Offer barcode">'+barcodeHtml(r.barcode)+'</div><div class="num">'+esc(r.barcode)+'</div><div class="hint">'+ICON.sun+'Show this at the counter to redeem</div></div>';
+    if(st==='new'){
+      h+='<div class="steps dark"><div><i>1</i><span><strong>Add the offer to your Fuel Mate card.</strong></span></div><div><i>2</i><span><strong>Scan your card at the counter</strong> as usual. The offer applies automatically.</span></div></div>';
       if(r.terms) h+='<p style="margin:0;font-size:12px;color:#A8A8A8;line-height:1.45">'+esc(r.terms)+'</p>';
-      h+='<div style="flex:1"></div><button type="button" class="outline" data-act="sim-scan">Simulate scan at counter (demo)</button>';
+      h+='<div style="flex:1"></div><button type="button" class="big-btn" data-act="activate">Add to my Fuel Mate card</button>';
+    } else if(st==='active'){
+      h+='<div class="redeemed"><div class="tick">'+ICON.check+'</div><b>On your card</b><span>Show your Fuel Mate card at the counter. The offer applies when it’s scanned, along with your fuel discount.</span></div>';
+      h+='<div style="flex:1"></div><button type="button" class="big-btn" data-go="card">Show my card</button>';
     } else {
-      h+='<div class="redeemed"><div class="tick">'+ICON.check+'</div><b>Redeemed</b><span>Scanned at '+red+'. Enjoy your tenders!</span></div>';
+      h+='<div class="redeemed"><div class="tick">'+ICON.check+'</div><b>Redeemed</b><span>Applied to your card scan at '+S.redeemed[d.file]+'. Enjoy!</span></div>';
       h+='<div style="flex:1"></div><button type="button" class="outline" data-go="'+(S.couponBack||'deals')+'">Done</button>';
     }
     h+='</div>';
@@ -708,7 +730,7 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
         '<div class="hdr" style="color:#fff"><button type="button" class="round" data-act="close-modal" aria-label="Close deal">'+ICON.close+'</button><span>Deal</span><span style="width:44px"></span></div>'+
         '<div class="vimg"><img src="'+esc(d.src)+'" alt="'+esc(d.title)+'"></div>'+
         '<div class="vmeta"><b>'+esc(d.title)+'</b>'+(d.ends?'<span>'+(d.starts?fmtDate(d.starts)+' – ':'Until ')+fmtDate(d.ends)+' · In store at participating Liberty sites</span>':'<span>In store at participating Liberty sites</span>')+
-        (d.redeem?'<button type="button" class="big-btn" style="margin-top:10px" data-redeem="'+S.modal.slice(5)+'">'+(S.redeemed[d.file]?'Redeemed · view offer':'Scan to redeem')+'</button>':'')+'</div></div>';
+        (d.redeem?'<button type="button" class="big-btn" style="margin-top:10px" data-redeem="'+S.modal.slice(5)+'">'+({redeemed:'Redeemed · view offer',active:'On your card · view offer','new':'Add to my Fuel Mate card'})[offerState(d)]+'</button>':'')+'</div></div>';
       var c=modalHost.querySelector('.round'); if(c) setTimeout(function(){try{c.focus();}catch(e){}},30);
       return;
     }
@@ -724,7 +746,12 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
   document.addEventListener('click',function(e){
     var el=e.target.closest('[data-go],[data-toast],[data-act],[data-role],[data-deal],[data-receipt],[data-redeem]'); if(!el) return;
     if(el.dataset.redeem!==undefined){ S.couponBack=(S.screen==='coupon'?S.couponBack:S.screen); S.modal=null; S.couponIdx=+el.dataset.redeem; go('coupon'); return; }
-    if(el.dataset.act==='sim-scan'){ var dd=DEALS.items[S.couponIdx]; if(dd){ S.redeemed[dd.file]=new Date().toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit'}); } render(false); return; }
+    if(el.dataset.act==='activate'){ var da=DEALS.items[S.couponIdx]; if(da){ S.activated[da.file]=true; } render(false); toast('Added to your Fuel Mate card.'); return; }
+    if(el.dataset.act==='sim-scan'){
+      var now=new Date().toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit'}), applied=activeOffers();
+      applied.forEach(function(d){ S.redeemed[d.file]=now; });
+      render(true); toast('Card scanned. '+applied.map(function(d){return d.title;}).join(', ')+' applied.'); return;
+    }
     if(el.dataset.deal!==undefined){ S.modal='deal:'+el.dataset.deal; renderModal(); return; }
     if(el.dataset.receipt){ S.receiptId=el.dataset.receipt; go('receipt'); return; }
     if(el.dataset.role){ var r=el.dataset.role; S=fresh(r); render(false); return; }
